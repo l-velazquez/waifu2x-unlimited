@@ -7,17 +7,375 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, user-scalable=yes">
 		<link rel="icon" href="favicon.ico">
 		<title>unlimited:waifu2x</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
 		<script src="ort/ort.wasm.min.js" defer></script>
 		<script src="script.js" defer></script>
-		<link href="style.css" rel="stylesheet" type="text/css">
+		<style>
+			*, *::before, *::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--black: #0a0a0a;
+				--white: #fafafa;
+				--red: #e63946;
+				--gray-100: #f5f5f5;
+				--gray-200: #e5e5e5;
+				--gray-300: #d4d4d4;
+				--gray-400: #a3a3a3;
+				--gray-500: #737373;
+				--gray-600: #525252;
+				--gray-700: #404040;
+				--gray-800: #262626;
+				--gray-900: #171717;
+				--font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+			}
+
+			html {
+				font-size: 16px;
+			}
+
+			body {
+				font-family: var(--font);
+				background: var(--white);
+				color: var(--black);
+				line-height: 1.5;
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				body {
+					background: var(--black);
+					color: var(--white);
+				}
+				.hint, .comment, .note {
+					color: var(--gray-400) !important;
+				}
+				input, select {
+					background: var(--gray-900) !important;
+					border-color: var(--gray-700) !important;
+					color: var(--white) !important;
+				}
+				input:focus, select:focus {
+					border-color: var(--red) !important;
+				}
+				#output-canvas {
+					background: var(--gray-900);
+					border-color: var(--gray-800);
+				}
+				footer {
+					border-color: var(--gray-800);
+				}
+			}
+
+			header {
+				padding: 4rem 2rem 3rem;
+				max-width: 1200px;
+				margin: 0 auto;
+				width: 100%;
+			}
+
+			h1 {
+				font-size: clamp(2.5rem, 8vw, 5rem);
+				font-weight: 900;
+				letter-spacing: -0.03em;
+				line-height: 1;
+				margin-bottom: 1rem;
+			}
+
+			h1::before {
+				content: '';
+				display: block;
+				width: 60px;
+				height: 8px;
+				background: var(--red);
+				margin-bottom: 1.5rem;
+			}
+
+			.subtitle {
+				font-size: 1.25rem;
+				font-weight: 500;
+				color: var(--gray-600);
+				margin-bottom: 2rem;
+			}
+
+			.note {
+				font-size: 0.75rem;
+				color: var(--gray-500);
+				font-weight: 500;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				margin-bottom: 0.5rem;
+			}
+
+			.note::before {
+				content: '→ ';
+				color: var(--red);
+			}
+
+			main {
+				flex: 1;
+				padding: 0 2rem 4rem;
+				max-width: 1200px;
+				margin: 0 auto;
+				width: 100%;
+				display: grid;
+				grid-template-columns: minmax(320px, 400px) 1fr;
+				gap: 3rem;
+				align-items: start;
+			}
+
+			@media (max-width: 900px) {
+				main {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			#input-canvas {
+				display: none;
+			}
+
+			form {
+				background: var(--gray-100);
+				padding: 2rem;
+				border-radius: 0;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				form {
+					background: var(--gray-900);
+				}
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+
+			tr {
+				border-bottom: 1px solid var(--gray-200);
+			}
+
+			@media (prefers-color-scheme: dark) {
+				tr {
+					border-color: var(--gray-800);
+				}
+			}
+
+			tr:last-child {
+				border-bottom: none;
+			}
+
+			td {
+				padding: 1rem 0;
+				vertical-align: top;
+			}
+
+			td:first-child {
+				font-size: 0.75rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				color: var(--gray-600);
+				width: 120px;
+				padding-top: 1.2rem;
+			}
+
+			@media (prefers-color-scheme: dark) {
+				td:first-child {
+					color: var(--gray-400);
+				}
+			}
+
+			label {
+				cursor: pointer;
+			}
+
+			input[type="file"] {
+				font-family: var(--font);
+				font-size: 0.875rem;
+				width: 100%;
+			}
+
+			input[type="number"],
+			input[type="color"],
+			select {
+				font-family: var(--font);
+				font-size: 0.875rem;
+				padding: 0.625rem 0.75rem;
+				border: 2px solid var(--gray-300);
+				background: var(--white);
+				border-radius: 0;
+				outline: none;
+				transition: border-color 0.15s ease;
+				width: 100%;
+				max-width: 200px;
+			}
+
+			input[type="color"] {
+				padding: 0.25rem;
+				height: 40px;
+				cursor: pointer;
+			}
+
+			input:focus, select:focus {
+				border-color: var(--black);
+			}
+
+			input[type="checkbox"] {
+				width: 18px;
+				height: 18px;
+				accent-color: var(--red);
+				cursor: pointer;
+			}
+
+			.hint {
+				font-size: 0.75rem;
+				color: var(--gray-500);
+				font-style: italic;
+			}
+
+			.comment {
+				font-size: 0.75rem;
+				color: var(--gray-500);
+				display: block;
+				margin-top: 0.5rem;
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			.buttons {
+				display: flex;
+				gap: 1rem;
+				padding-top: 1rem;
+			}
+
+			button {
+				font-family: var(--font);
+				font-size: 0.875rem;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				padding: 1rem 2rem;
+				border: none;
+				cursor: pointer;
+				transition: all 0.15s ease;
+			}
+
+			#start-button {
+				background: var(--red);
+				color: var(--white);
+				flex: 1;
+			}
+
+			#start-button:hover:not(:disabled) {
+				background: #c1121f;
+			}
+
+			#stop-button {
+				background: var(--black);
+				color: var(--white);
+			}
+
+			#stop-button:hover:not(:disabled) {
+				background: var(--gray-800);
+			}
+
+			button:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+			}
+
+			#message {
+				grid-column: 1 / -1;
+				font-size: 1.5rem;
+				font-weight: 500;
+				text-align: center;
+				padding: 2rem;
+				color: var(--gray-500);
+			}
+
+			#output-canvas {
+				width: 100%;
+				min-height: 300px;
+				background: var(--gray-100);
+				border: 2px solid var(--gray-200);
+				display: block;
+			}
+
+			#output-canvas.expanded {
+				grid-column: 1 / -1;
+			}
+
+			footer {
+				padding: 2rem;
+				max-width: 1200px;
+				margin: 0 auto;
+				width: 100%;
+				border-top: 1px solid var(--gray-200);
+				display: flex;
+				flex-wrap: wrap;
+				gap: 1rem 3rem;
+			}
+
+			footer p {
+				font-size: 0.75rem;
+				color: var(--gray-500);
+			}
+
+			footer a {
+				color: var(--black);
+				text-decoration: none;
+				font-weight: 500;
+				border-bottom: 1px solid var(--red);
+				transition: color 0.15s ease;
+			}
+
+			footer a:hover {
+				color: var(--red);
+			}
+
+			@media (prefers-color-scheme: dark) {
+				footer a {
+					color: var(--white);
+				}
+				footer a:hover {
+					color: var(--red);
+				}
+			}
+
+			@media (max-width: 600px) {
+				header {
+					padding: 2rem 1.5rem;
+				}
+				main {
+					padding: 0 1.5rem 3rem;
+				}
+				form {
+					padding: 1.5rem;
+				}
+				td:first-child {
+					width: 100px;
+					font-size: 0.65rem;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<header>
 			<h1>unlimited:waifu2x</h1>
 			<p class="subtitle">An experimental in-browser version of waifu2x.</p>
-			<p class="note">2023-05-04: Add new art_scan models for manga, anime screencaps; Ctrl+F5 to reload</p>
-			<p class="note">2023-04-07: Update photo models; Ctrl+F5 to reload</p>
-			<p class="note">2023-03-29: Add new photo models; Drag and drop support for image files</p>
+			<p class="note">2023-05-04: Add new art_scan models for manga, anime screencaps</p>
+			<p class="note">2023-04-07: Update photo models</p>
+			<p class="note">2023-03-29: Add new photo models; Drag and drop support</p>
 		</header>
 		<main>
 			<canvas id="input-canvas" width="0" height="0"></canvas>
@@ -29,7 +387,7 @@
 					</tr>
 					<tr>
 						<td></td>
-						<td class="hint">...or drag and drop<br />...or paste from clipboard</td>
+						<td class="hint">...or drag and drop<br>...or paste from clipboard</td>
 					</tr>
 					<tr>
 						<td><label for="select-model">Model</label></td>
@@ -61,8 +419,7 @@
 							<option value="2" selected>2x</option>
 							<option value="4">4x</option>
 						</select>
-							<span id="scale-comment" class="comment hidden">no 4x support</span>
-						</td>
+						<span id="scale-comment" class="comment hidden">no 4x support</span></td>
 					</tr>
 					<tr>
 						<td><label for="tile-size">Tile Size</label></td>
@@ -73,15 +430,12 @@
 								<option value="400">400</option>
 								<option value="640">640</option>
 							</datalist>
-							<br />
-							<span id="tile-size-comment" class="comment hidden">256 is recommended</span>
-						</td>
+							<span id="tile-size-comment" class="comment hidden">256 is recommended</span></td>
 					</tr>
 					<tr>
 						<td>Tile Order</td>
 						<td>
-							<label><input type="checkbox" id="tile-random" disabled> Random</label>
-							<br />
+							<label><input type="checkbox" id="tile-random" disabled> Random</label><br>
 							<label><input type="checkbox" id="tile-focus" checked disabled> Cursor Focus</label>
 						</td>
 					</tr>
@@ -120,10 +474,8 @@
 		</main>
 		<footer>
 			<p><a href="https://unlimited.waifu2x.net/">The website</a> is under construction.</p>
-			<p>Powered by <a href="https://github.com/nagadomi/nunif">nunif/waifu2x</a>,
-				<a href="https://waifu2x.udp.jp/">waifu2x.udp.jp</a></p>
-			<p>Rewritten by <a href="https://cohost.org/LoganDark">LoganDark</a> and
-				<a href="https://cohost.org/EmilyTheFlareon">Emily the Flareon</a></p>
+			<p>Powered by <a href="https://github.com/nagadomi/nunif">nunif/waifu2x</a>, <a href="https://waifu2x.udp.jp/">waifu2x.udp.jp</a></p>
+			<p>Rewritten by <a href="https://cohost.org/LoganDark">LoganDark</a> and <a href="https://cohost.org/EmilyTheFlareon">Emily the Flareon</a></p>
 		</footer>
 	</body>
 </html>
